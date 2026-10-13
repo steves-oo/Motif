@@ -3,7 +3,6 @@ import { listen } from '@tauri-apps/api/event';
 import { getCurrentWindow } from '@tauri-apps/api/window';
 import { invoke } from '@tauri-apps/api/core';
 import { open } from '@tauri-apps/plugin-dialog';
-import { enable, disable, isEnabled } from '@tauri-apps/plugin-autostart';
 import { useItemsStore } from '../stores/itemsStore';
 import { useSettingsStore, type Theme, type Lang } from '../stores/settingsStore';
 import { STRINGS, type LangStrings } from '../lib/strings';
@@ -43,20 +42,23 @@ function AutostartSetting({ s }: { s: LangStrings }) {
   const [on, setOn] = useState<boolean | null>(null);
   const [err, setErr] = useState(false);
 
+  // 走自实现的命令：Windows 上修复了上游插件注册表路径不加引号的问题
+  const queryEnabled = () => invoke<boolean>('is_autostart_enabled');
+
   useEffect(() => {
-    isEnabled().then(setOn).catch(() => setOn(false));
+    queryEnabled().then(setOn).catch(() => setOn(false));
   }, []);
 
   const toggle = async (next: boolean) => {
     if (next === on) return;
     setErr(false);
     try {
-      await (next ? enable() : disable());
+      await invoke('set_autostart', { enabled: next });
     } catch {
       setErr(true);
     }
     // 无论成败都回读系统真实状态
-    setOn(await isEnabled().catch(() => false));
+    setOn(await queryEnabled().catch(() => false));
   };
 
   const OPTIONS = [
