@@ -9,6 +9,8 @@ use tauri::{
 use tauri_plugin_autostart::MacosLauncher;
 use tauri_plugin_global_shortcut::{GlobalShortcutExt, Shortcut, ShortcutState};
 
+mod autostart;
+
 // ── 数据目录：文件即真相，指针存本机 app-config，不参与同步 ──────────────
 
 fn config_path(app: &AppHandle) -> Result<PathBuf, String> {
@@ -492,7 +494,9 @@ pub fn run() {
             write_record_atomic,
             move_to_conflicts,
             move_record,
-            remove_record
+            remove_record,
+            autostart::set_autostart,
+            autostart::is_autostart_enabled
         ])
         .build(tauri::generate_context!())
         .expect("error while building tauri application")
